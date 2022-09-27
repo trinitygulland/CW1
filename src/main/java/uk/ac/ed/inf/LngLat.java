@@ -1,6 +1,9 @@
 package uk.ac.ed.inf;
 
 import java.lang.Math;
+import java.util.List;
+
+import static java.lang.Math.abs;
 
 /** Record to keep track of a point with a given latitude and longitude.
  */
@@ -16,8 +19,29 @@ public record LngLat(double lng, double lat) {
      * @return True if point is in Central Area, false otherwise.
      */
     public Boolean inCentralArea() {
-        // check if point is in central area
+        List<LngLat> centralArea = CentralArea.getInstance().getCentralArea();
+
+        // calculate centre point of central area in order to denote the four corners of the rectangle
+
+        double maxLat = centralArea.get(0).lat;
+        double minLat = centralArea.get(0).lat;
+        double maxLng = centralArea.get(0).lng;
+        double minLng = centralArea.get(0).lng;
+
+        for (LngLat point : centralArea) {
+            if (point.lat > maxLat) { maxLat = point.lat; }
+            if (point.lat < minLat) { minLat = point.lat; }
+            if (point.lng > maxLng) { maxLng = point.lng; }
+            if (point.lng < minLng) { minLng = point.lng; }
+        }
+
+        LngLat centrepoint = new LngLat((maxLng + minLng)/2, (maxLat + minLat)/2);
+
         return null;
+    }
+
+    private double area(double x1, double y1, double x2, double y2, double x3, double y3) {
+        return abs((x1 * (y2 - y3) + x2 * (y3 - y1) + x3 * (y1 - y2)) / 2);
     }
 
     /**
