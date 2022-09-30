@@ -3,46 +3,51 @@ package uk.ac.ed.inf;
 import java.lang.Math;
 import java.util.List;
 
-import static java.lang.Math.abs;
 
-/** Record to keep track of a point with a given latitude and longitude.
+/** Record to represent a point with a given latitude and longitude.
  */
 
 public record LngLat(double lng, double lat) {
 
     /** If the distance to another point is less than the distance tolerance, they are close.
      */
-    static private double distanceTolerance = 0.00015;
+    static final private double distanceTolerance = 0.00015;
 
     /**
+     * Uses ray-casting to check if a point is in the Central Area.
+     * An infinite line is cast to the right of the point.
+     * If there are an odd number of intersections between the ray
+     * and the polygon formed by the central area, the point is
+     * inside.
      *
      * @return True if point is in Central Area, false otherwise.
      */
     public Boolean inCentralArea() {
         List<LngLat> centralArea = CentralArea.getInstance().getCentralArea();
 
-        // calculate centre point of central area in order to denote the four corners of the rectangle
+        int i;
+        int j;
+        boolean result = false;
 
-        double maxLat = centralArea.get(0).lat;
-        double minLat = centralArea.get(0).lat;
-        double maxLng = centralArea.get(0).lng;
-        double minLng = centralArea.get(0).lng;
+        // loop through adjacent points in polygon forming central area
+        for (i = 0, j = centralArea.size() - 1; i < centralArea.size(); j = i++) {
 
-        for (LngLat point : centralArea) {
-            if (point.lat > maxLat) { maxLat = point.lat; }
-            if (point.lat < minLat) { minLat = point.lat; }
-            if (point.lng > maxLng) { maxLng = point.lng; }
-            if (point.lng < minLng) { minLng = point.lng; }
+            // find the longitude of the point where the ray intersects the line between the two points
+            double intersectionLongitude = (centralArea.get(j).lng - centralArea.get(i).lng) *
+                    (this.lat - centralArea.get(i).lat) / (centralArea.get(j).lat-centralArea.get(i).lat)
+                    + centralArea.get(i).lng;
+
+            // check that our point is between two chosen points in latitude
+            if ((centralArea.get(i).lat >= this.lat) != (centralArea.get(j).lat >= this.lat) &&
+
+                    // check that the intersection is to the right of our point
+                    (this.lng <= intersectionLongitude)) {
+                result = !result;
+            }
         }
-
-        LngLat centrepoint = new LngLat((maxLng + minLng)/2, (maxLat + minLat)/2);
-
-        return null;
+        return result;
     }
 
-    private double area(double x1, double y1, double x2, double y2, double x3, double y3) {
-        return abs((x1 * (y2 - y3) + x2 * (y3 - y1) + x3 * (y1 - y2)) / 2);
-    }
 
     /**
      *
@@ -62,6 +67,18 @@ public record LngLat(double lng, double lat) {
      */
     public boolean closeTo(LngLat otherPoint) {
         return (this.distanceTo(otherPoint) < distanceTolerance);
+    }
+
+    public LngLat NextPosition(COMPASS_DIRECTION direction) {
+        double angle = direction.getAngle();
+        double angleInRadians = Math.toRadians(angle);
+
+        double deltaLng = distanceTolerance * Math.cos(angleInRadians);
+        double deltaLat = deltaLng * Math.tan(angleInRadians);
+
+        LngLat newPoint = new LngLat(this.lng + deltaLng, this.lat + deltaLat);
+
+        return newPoint;
     }
 }
 
