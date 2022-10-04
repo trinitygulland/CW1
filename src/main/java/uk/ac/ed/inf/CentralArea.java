@@ -31,7 +31,7 @@ public class CentralArea {
      * and then converts this to list of LngLat objects.
      * @return list of LngLat objects representing corners of the central area.
      */
-    public List<LngLat> getCentralArea() {
+    public List<LngLat> getCentralAreaFromRestServer() {
         if (endpoint == null) {
             return null;
         }

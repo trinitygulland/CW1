@@ -6,18 +6,16 @@ package uk.ac.ed.inf;
 
 public class CentralPoint {
     private String name;
-    private String longitude;
-    private String latitude;
+    private double longitude;
+    private double latitude;
 
     public String getName() {
         return name;
     }
 
-    public String getLongitude() {
-        return longitude;
-    }
+    public double getLongitude() { return longitude; }
 
-    public String getLatitude() {
+    public double getLatitude() {
         return latitude;
     }
 
@@ -25,6 +23,6 @@ public class CentralPoint {
      *
      * @return LngLat representation of the point.
      */
-    public LngLat getPoint() { return new LngLat(Double.parseDouble(longitude), Double.parseDouble(latitude)); }
+    public LngLat getPoint() { return new LngLat(longitude, latitude); }
 
 }

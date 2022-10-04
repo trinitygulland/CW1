@@ -1,6 +1,7 @@
 package uk.ac.ed.inf;
 
 import java.lang.Math;
+import java.util.ArrayList;
 import java.util.List;
 
 
@@ -23,7 +24,7 @@ public record LngLat(double lng, double lat) {
      * @return True if point is in Central Area, false otherwise.
      */
     public Boolean inCentralArea() {
-        List<LngLat> centralArea = CentralArea.getInstance().getCentralArea();
+        List<LngLat> centralArea = CentralArea.getInstance().getCentralAreaFromRestServer();
 
         int i;
         int j;
@@ -38,16 +39,17 @@ public record LngLat(double lng, double lat) {
                     + centralArea.get(i).lng;
 
             // check that our point is between two chosen points in latitude
-            if ((centralArea.get(i).lat >= this.lat) != (centralArea.get(j).lat >= this.lat) &&
+            double maxLng = Math.max(centralArea.get(i).lat,centralArea.get(j).lat);
+            double minLng = Math.min(centralArea.get(i).lat,centralArea.get(j).lat);
 
+            if (maxLng >= this.lat && minLng <= this.lat &&
                     // check that the intersection is to the right of our point
-                    (this.lng <= intersectionLongitude)) {
+                    this.lng < intersectionLongitude) {
                 result = !result;
             }
         }
         return result;
     }
-
 
     /**
      *
@@ -69,10 +71,19 @@ public record LngLat(double lng, double lat) {
         return (this.distanceTo(otherPoint) < distanceTolerance);
     }
 
+
+    /**
+     * Computes a  move in a given compass direction and returns the result.
+     *
+     * @param direction The compass direction to make the move in.
+     * @return A LngLat point representing position after moving.
+     */
     public LngLat NextPosition(COMPASS_DIRECTION direction) {
+        // convert angle from degrees to radians
         double angle = direction.getAngle();
         double angleInRadians = Math.toRadians(angle);
 
+        // use trigonometry to calculate change in latitude and longitude
         double deltaLng = distanceTolerance * Math.cos(angleInRadians);
         double deltaLat = deltaLng * Math.tan(angleInRadians);
 
