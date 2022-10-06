@@ -13,18 +13,18 @@ public class App
     public static void main( String[] args )
     {
 
-        LngLat point = new LngLat(1,2);
-        System.out.println(point.inCentralArea());
+        //LngLat point = new LngLat(1,2);
+        //System.out.println(point.inCentralArea());
 
-        /**
+
         try {
             URL baseURL = new URL("https://ilp-rest.azurewebsites.net");
             Restaurant[] restaurants = (new Restaurant()).getRestaurantsFromServer(baseURL);
-            System.out.print("Done");
+            System.out.print(restaurants);
         }
         catch (MalformedURLException e){
             e.printStackTrace();
         }
-         */
+
     }
 }
