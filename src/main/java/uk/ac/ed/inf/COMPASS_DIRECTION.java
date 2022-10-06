@@ -1,5 +1,8 @@
 package uk.ac.ed.inf;
 
+/**
+ * Enum to represent all 16 compass directions and to map them to their corresponding angle.
+ */
 public enum COMPASS_DIRECTION {
     N (90),
     NNW(112.5),

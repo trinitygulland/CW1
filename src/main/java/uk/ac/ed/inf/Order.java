@@ -2,6 +2,10 @@ package uk.ac.ed.inf;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+/**
+ * Represents one order and its details: date, number, customer, payment details, price, and items.
+ */
+
 public class Order {
     @JsonProperty("orderNo")
     public String orderNo;
