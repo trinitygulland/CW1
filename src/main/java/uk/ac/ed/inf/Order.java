@@ -49,9 +49,15 @@ public class Order {
      * @return The price of the delivery.
      */
     public int getDeliveryCost(Restaurant[] restaurants, String[] pizzas) {
+
         int price = 0;
 
         try {
+            if (restaurants == null) { throw new NullPointerException("Restaurants list is null"); }
+            if (pizzas == null) { throw new NullPointerException("Pizzas list is null"); }
+            if (restaurants.length == 0) { throw new IllegalArgumentException("No restaurants provided"); }
+            if (pizzas.length == 0) { throw new IllegalArgumentException("No pizzas provided in order"); }
+
             Restaurant restaurantOrderedFrom = null;
 
             // find the restaurant that these orders relate to
@@ -65,6 +71,7 @@ public class Order {
                 }
             }
 
+            if (restaurantOrderedFrom == null) { throw new NullPointerException("No restaurant matched"); }
             Menu[] orderMenu = restaurantOrderedFrom.getMenu();
 
             // check each pizza and find its price from the menu
@@ -80,7 +87,7 @@ public class Order {
                     }
                 }
                 // if pizza not in the restaurant's menu, throw an exception
-                if (!pizzaFound) { throw new InvalidPizzaCombinationException(); }
+                if (!pizzaFound) { throw new InvalidPizzaCombinationException("Invalid pizza combination"); }
             }
 
             // add the £1 delivery charge for each order
@@ -88,6 +95,12 @@ public class Order {
 
         }
         catch(InvalidPizzaCombinationException e){
+            e.printStackTrace();
+        }
+        catch(IllegalArgumentException e) {
+            e.printStackTrace();
+        }
+        catch(NullPointerException e) {
             e.printStackTrace();
         }
 

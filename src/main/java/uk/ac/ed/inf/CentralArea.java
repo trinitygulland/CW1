@@ -32,9 +32,6 @@ public class CentralArea {
      * @return list of LngLat objects representing corners of the central area.
      */
     public List<LngLat> getCentralAreaFromRestServer() {
-        if (endpoint == null) {
-            return null;
-        }
 
         try {
             if (!baseUrl.endsWith(("/"))) {

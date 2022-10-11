@@ -42,6 +42,11 @@ public record LngLat(double lng, double lat) {
             double maxLng = Math.max(centralArea.get(i).lat,centralArea.get(j).lat);
             double minLng = Math.min(centralArea.get(i).lat,centralArea.get(j).lat);
 
+            // if a point intersects with the border, we know instantly it is in the central area
+            if (this.lng == intersectionLongitude) {
+                 return true;
+            }
+
             if (maxLng >= this.lat && minLng <= this.lat &&
                     // check that the intersection is to the right of our point
                     this.lng < intersectionLongitude) {
