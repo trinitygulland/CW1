@@ -20,6 +20,8 @@ public class Restaurant {
     @JsonProperty("menu")
     public Menu[] menu;
 
+    public String endpoint = "restaurants";
+
     public String getName() { return name; }
 
     public double getLongitude() { return longitude; }
@@ -34,13 +36,13 @@ public class Restaurant {
      * @return list of restaurants
      */
 
-    public static Restaurant[] getRestaurantsFromServer(URL serverBaseAddress) {
+    public Restaurant[] getRestaurantsFromServer(URL serverBaseAddress) {
 
-        String filenameToLoad = "restaurants";
+        String endpoints = "restaurants";
 
         try {
             URL restaurantURL = new URL(serverBaseAddress.getProtocol(), serverBaseAddress.getHost(),
-                    serverBaseAddress.getPort(), serverBaseAddress.getPath() + "/" + filenameToLoad);
+                    serverBaseAddress.getPort(), serverBaseAddress.getPath() + "/" + endpoint);
 
             ObjectMapper mapper = new ObjectMapper();
             Restaurant[] restaurants = mapper.readValue(restaurantURL, Restaurant[].class);

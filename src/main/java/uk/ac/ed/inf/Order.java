@@ -1,6 +1,11 @@
 package uk.ac.ed.inf;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
 
 /**
  * Represents one order and its details: date, number, customer, payment details, price, and items.
@@ -24,6 +29,8 @@ public class Order {
     @JsonProperty("orderItems")
     public String[] orderItems;
 
+    public OrderOutcome orderOutcome;
+
     public String getOrderNo() { return orderNo; }
 
     public String getOrderDate() { return orderDate; }
@@ -40,6 +47,8 @@ public class Order {
 
     public String[] getOrderItems() { return orderItems; }
 
+    public OrderOutcome getOrderOutcome() { return orderOutcome; }
+
     /**
      * Takes a list of restaurants and a list of pizzas to be delivered and
      * returns the price of the order.
@@ -53,34 +62,28 @@ public class Order {
         int price = 0;
 
         try {
-            if (restaurants == null) { throw new NullPointerException("Restaurants list is null"); }
-            if (pizzas == null) { throw new NullPointerException("Pizzas list is null"); }
+            // check arguments
             if (restaurants.length == 0) { throw new IllegalArgumentException("No restaurants provided"); }
-            if (pizzas.length == 0) { throw new IllegalArgumentException("No pizzas provided in order"); }
+            if (pizzas.length == 0 || pizzas.length > 4) { throw new InvalidPizzaCount("No pizzas provided in order"); }
 
-            Restaurant restaurantOrderedFrom = null;
-
-            // find the restaurant that these orders relate to
-            for (Restaurant restaurant : restaurants) {
-                Menu[] menu = restaurant.getMenu();
-
-                for (Menu item : menu) {
-                    if (item.getName() == pizzas[0]) {
-                        restaurantOrderedFrom = restaurant;
-                    }
+            // check pizza validity
+            for(String pizza : pizzas) {
+                if (!validPizza(restaurants,pizza)) {
+                    throw new InvalidPizzaNotDefined("Pizza " + pizza + " is not defined.");
                 }
             }
 
-            if (restaurantOrderedFrom == null) { throw new NullPointerException("No restaurant matched"); }
+            // find the restaurant that these orders relate to
+            Restaurant restaurantOrderedFrom = restaurantOrderedFrom(restaurants, pizzas);
             Menu[] orderMenu = restaurantOrderedFrom.getMenu();
 
             // check each pizza and find its price from the menu
             for (String pizza : pizzas) {
-                Boolean pizzaFound = false;
+                boolean pizzaFound = false;
 
                 // loop through menu items checking if they match pizza
                 for(Menu item : orderMenu) {
-                    if (item.getName() == pizza) {
+                    if (item.getName().equals(pizza)) {
                         // if pizza found, add price to total price
                         price += item.getPriceInPence();
                         pizzaFound = true;
@@ -90,20 +93,86 @@ public class Order {
                 if (!pizzaFound) { throw new InvalidPizzaCombinationException("Invalid pizza combination"); }
             }
 
-            // add the £1 delivery charge for each order
-            price += pizzas.length * 1000;
+            // add the £1 delivery charge for the order
+            price += 100;
+            orderOutcome = OrderOutcome.ValidButNotDelivered;
 
         }
         catch(InvalidPizzaCombinationException e){
+            orderOutcome = OrderOutcome.InvalidPizzaCombinationMultipleSuppliers;
             e.printStackTrace();
         }
-        catch(IllegalArgumentException e) {
+        catch (InvalidPizzaNotDefined e){
+            orderOutcome = OrderOutcome.InvalidPizzaNotDefined;
             e.printStackTrace();
         }
-        catch(NullPointerException e) {
+        catch(InvalidPizzaCount e) {
+            orderOutcome = OrderOutcome.InvalidPizzaCount;
+            e.printStackTrace();
+        }
+        catch(IllegalArgumentException | NullPointerException e) {
+            orderOutcome = OrderOutcome.Invalid;
             e.printStackTrace();
         }
 
         return price;
+    }
+
+    /**
+     * Helper function to check a pizza's name is valid and it exists.
+     * @param restaurants The list of restaurants whose menus should be searched for the pizza name.
+     * @param pizza The pizza name to be validated.
+     * @return True if pizza is valid, else false.
+     */
+    public static boolean validPizza(Restaurant[] restaurants, String pizza) {
+        for (Restaurant restaurant : restaurants) {
+            for (Menu item : restaurant.getMenu()) {
+                if (item.getName().equals(pizza)) { return true; }
+            }
+        }
+        return false;
+    }
+
+
+    /**
+     * Helper function to determine restaurant pizzas were ordered from.
+     * @param restaurants List of restaurants to check the menus of.
+     * @param pizzas List of pizzas in order.
+     * @return Restaurant that first pizza was ordered from.
+     */
+    public static Restaurant restaurantOrderedFrom(Restaurant[] restaurants, String[] pizzas) {
+        for (Restaurant restaurant : restaurants) {
+            Menu[] menu = restaurant.getMenu();
+
+            for (Menu item : menu) {
+                if (item.getName().equals(pizzas[0])) {
+                    return restaurant;
+                }
+            }
+        }
+        return null;
+    }
+
+    public static Order[] getOrdersFromServer(URL serverBaseAddress, String date) {
+
+        String endpoint = "orders";
+
+        try {
+            URL restaurantURL = new URL(serverBaseAddress.getProtocol(), serverBaseAddress.getHost(),
+                    serverBaseAddress.getPort(), serverBaseAddress.getPath() + "/" + endpoint + "/" + date);
+
+            ObjectMapper mapper = new ObjectMapper();
+            Order[] orders = mapper.readValue(restaurantURL, Order[].class);
+
+            return orders;
+        }
+        catch (MalformedURLException e) {
+            e.printStackTrace();
+        }
+        catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return null;
     }
 }
