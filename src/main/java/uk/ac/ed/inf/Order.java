@@ -2,6 +2,10 @@ package uk.ac.ed.inf;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import uk.ac.ed.inf.exceptions.InvalidPizzaCombinationException;
+import uk.ac.ed.inf.exceptions.InvalidPizzaCountException;
+import uk.ac.ed.inf.exceptions.InvalidPizzaNotDefinedException;
+import uk.ac.ed.inf.exceptions.InvalidTotalException;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -64,12 +68,12 @@ public class Order {
         try {
             // check arguments
             if (restaurants.length == 0) { throw new IllegalArgumentException("No restaurants provided"); }
-            if (pizzas.length == 0 || pizzas.length > 4) { throw new InvalidPizzaCount("No pizzas provided in order"); }
+            if (pizzas.length == 0 || pizzas.length > 4) { throw new InvalidPizzaCountException("No pizzas provided in order"); }
 
             // check pizza validity
             for(String pizza : pizzas) {
                 if (!validPizza(restaurants,pizza)) {
-                    throw new InvalidPizzaNotDefined("Pizza " + pizza + " is not defined.");
+                    throw new InvalidPizzaNotDefinedException("Pizza " + pizza + " is not defined.");
                 }
             }
 
@@ -95,6 +99,11 @@ public class Order {
 
             // add the £1 delivery charge for the order
             price += 100;
+
+            if (price != priceTotalInPence) {
+                throw new InvalidTotalException("Expected total: " + price + "\nActual total: " + priceTotalInPence);
+            }
+
             orderOutcome = OrderOutcome.ValidButNotDelivered;
 
         }
@@ -102,16 +111,20 @@ public class Order {
             orderOutcome = OrderOutcome.InvalidPizzaCombinationMultipleSuppliers;
             e.printStackTrace();
         }
-        catch (InvalidPizzaNotDefined e){
+        catch (InvalidPizzaNotDefinedException e){
             orderOutcome = OrderOutcome.InvalidPizzaNotDefined;
             e.printStackTrace();
         }
-        catch(InvalidPizzaCount e) {
+        catch(InvalidPizzaCountException e) {
             orderOutcome = OrderOutcome.InvalidPizzaCount;
             e.printStackTrace();
         }
         catch(IllegalArgumentException | NullPointerException e) {
             orderOutcome = OrderOutcome.Invalid;
+            e.printStackTrace();
+        }
+        catch(InvalidTotalException e) {
+            orderOutcome = OrderOutcome.InvalidTotal;
             e.printStackTrace();
         }
 

@@ -31,4 +31,11 @@ public enum COMPASS_DIRECTION {
         return angle;
     }
 
+    public static COMPASS_DIRECTION getDirectionFromAngle(double angle){
+        for(COMPASS_DIRECTION e : COMPASS_DIRECTION.values()){
+            if(e.getAngle() == angle) { return e; }
+        }
+        return null;
+    }
+
 }

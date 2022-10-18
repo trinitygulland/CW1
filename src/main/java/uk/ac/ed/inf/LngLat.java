@@ -23,8 +23,8 @@ public record LngLat(double lng, double lat) {
      *
      * @return True if point is in Central Area, false otherwise.
      */
-    public Boolean inCentralArea() {
-        List<LngLat> centralArea = CentralArea.getInstance().getCentralAreaFromRestServer();
+    public boolean inCentralArea() {
+        List<LngLat> centralArea = CentralArea.getInstance().getCentralAreaFromServer();
 
         int i;
         int j;
