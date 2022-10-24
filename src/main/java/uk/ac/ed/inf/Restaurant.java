@@ -20,8 +20,6 @@ public class Restaurant {
     @JsonProperty("menu")
     public Menu[] menu;
 
-    public String endpoint = "restaurants";
-
     public String getName() { return name; }
 
     public double getLongitude() { return longitude; }
@@ -36,9 +34,9 @@ public class Restaurant {
      * @return list of restaurants
      */
 
-    public Restaurant[] getRestaurantsFromServer(URL serverBaseAddress) {
+    public static Restaurant[] getRestaurantsFromServer(URL serverBaseAddress) {
 
-        String endpoints = "restaurants";
+        String endpoint = "restaurants";
 
         try {
             URL restaurantURL = new URL(serverBaseAddress.getProtocol(), serverBaseAddress.getHost(),

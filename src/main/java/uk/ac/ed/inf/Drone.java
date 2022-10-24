@@ -12,10 +12,29 @@ import java.util.stream.Collectors;
 
 public class Drone {
 
-    private double distanceTolerance = 0.00015;
+    private final double distanceTolerance = 0.00015;
     private DroneMove[] flightpath = {};
-    private LngLat[] journeyPoints = {};
+    private final LngLat initialPoint = new LngLat(-3.186874, 55.944494);
+    private ArrayList<LngLat> journeyPoints = new ArrayList<>();
 
+    public List<LngLat> getJourneyPoints(){
+        return journeyPoints;
+    }
+
+    public void generatePath(Restaurant[] restaurants, Order[] orders) {
+        journeyPoints.add(initialPoint);
+
+        for(Order order : orders) {
+            if (order.orderOutcome == OrderOutcome.ValidButNotDelivered) {
+                LngLat restaurant = order.getRestaurantAddress(restaurants);
+                ArrayList<LngLat> pathToRestaurant = getPathBetweenPoints(journeyPoints.get(-1), restaurant);
+                journeyPoints.addAll(pathToRestaurant);
+
+                ArrayList<LngLat> pathToDeliver = getPathBetweenPoints(journeyPoints.get(-1), initialPoint);
+                journeyPoints.addAll(pathToRestaurant);
+            }
+        }
+    }
 
     /**
      * Finds path between two points based on moving in the 16 compass directions.

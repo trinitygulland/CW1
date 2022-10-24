@@ -18,7 +18,7 @@ public class OrderTest {
     @Test
     public void testGetOrdersFromServer(){
         try {
-            Order[] orders = (new Order()).getOrdersFromServer(new URL("https://ilp-rest.azurewebsites.net/"), "2023-01-02");
+            Order[] orders = (new Order()).getOrdersFromServer(new URL("https://ilp-rest.azurewebsites.net/"), "2023-01-01");
         }
         catch (MalformedURLException e ){
             e.printStackTrace();
@@ -31,9 +31,25 @@ public class OrderTest {
             Order order = (new Order()).getOrdersFromServer(new URL("https://ilp-rest.azurewebsites.net/"), "2023-01-02")[0];
             Restaurant[] restaurants = (new Restaurant()).getRestaurantsFromServer(new URL("https://ilp-rest.azurewebsites.net/"));
 
-            Assert.assertEquals(order.getDeliveryCost(restaurants, order.orderItems), order.priceTotalInPence);
+            Assert.assertEquals(order.getDeliveryCost(Order.getRestaurantOrderedFrom(restaurants, order.orderItems), order.orderItems), order.priceTotalInPence);
         }
         catch (MalformedURLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Test
+    public void testValidateOrder(){
+        try {
+            URL baseServerAddress = new URL("https://ilp-rest.azurewebsites.net/");
+            Restaurant[] restaurants = Restaurant.getRestaurantsFromServer(baseServerAddress);
+            Order[] orders = Order.getOrdersFromServer(baseServerAddress, "2023-01-02");
+
+            for (Order order : orders) {
+                order.validateOrder(restaurants);
+            }
+        }
+        catch(MalformedURLException e){
             e.printStackTrace();
         }
     }

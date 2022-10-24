@@ -6,6 +6,8 @@ import static org.junit.Assert.assertTrue;
 import org.junit.Assert;
 import org.junit.Test;
 
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -27,5 +29,24 @@ public class DroneTest {
         LngLat endpoint = new LngLat(0.001,0.043);
 
         List<LngLat> journey = (new Drone()).getPathBetweenPoints(startpoint, endpoint);
+    }
+
+    @Test
+    public void testGeneratePath(){
+        try {
+            URL baseServerAddress = new URL("https://ilp-rest.azurewebsites.net/");
+            Restaurant[] restaurants = Restaurant.getRestaurantsFromServer(baseServerAddress);
+            Order[] orders = Order.getOrdersFromServer(baseServerAddress, "2023-04-15");
+
+            for (Order order : orders) {
+                order.validateOrder(restaurants);
+            }
+
+            Drone drone = new Drone();
+            drone.generatePath(restaurants, orders);
+        }
+        catch(MalformedURLException e) {
+            e.printStackTrace();
+        }
     }
 }

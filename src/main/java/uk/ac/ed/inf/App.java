@@ -22,7 +22,15 @@ public class App
             int hashCode = args[2].hashCode();
             Random r = new Random(hashCode);
 
-            Restaurant[] restaurants = (new Restaurant()).getRestaurantsFromServer(baseUrlAddress);
+            Restaurant[] restaurants = Restaurant.getRestaurantsFromServer(baseUrlAddress);
+            Order[] orders = Order.getOrdersFromServer(baseUrlAddress, dateString);
+
+            for(Order order : orders) {
+                order.validateOrder(restaurants);
+            }
+
+            Drone drone = new Drone();
+            drone.generatePath(restaurants, orders);
 
         }
         catch (NullPointerException | MalformedURLException | IllegalArgumentException |
