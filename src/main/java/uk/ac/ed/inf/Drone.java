@@ -1,5 +1,7 @@
 package uk.ac.ed.inf;
 
+import uk.ac.ed.inf.exceptions.TooManyMovesException;
+
 import java.lang.Math;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -13,26 +15,54 @@ import java.util.stream.Collectors;
 public class Drone {
 
     private final double distanceTolerance = 0.00015;
-    private DroneMove[] flightpath = {};
-    private final LngLat initialPoint = new LngLat(-3.186874, 55.944494);
+    private ArrayList<DroneMove> flightpath = new ArrayList<>();
+    private final LngLat deliveryPoint = new LngLat(-3.186874, 55.944494);
     private ArrayList<LngLat> journeyPoints = new ArrayList<>();
+    private int maxMoves = 2000;
 
-    public List<LngLat> getJourneyPoints(){
-        return journeyPoints;
-    }
+    public List<DroneMove> getFlightpath() { return flightpath; }
 
     public void generatePath(Restaurant[] restaurants, Order[] orders) {
-        journeyPoints.add(initialPoint);
+        journeyPoints.add(deliveryPoint);
 
-        for(Order order : orders) {
-            if (order.orderOutcome == OrderOutcome.ValidButNotDelivered) {
-                LngLat restaurant = order.getRestaurantAddress(restaurants);
-                ArrayList<LngLat> pathToRestaurant = getPathBetweenPoints(journeyPoints.get(-1), restaurant);
-                journeyPoints.addAll(pathToRestaurant);
+        try {
+            for(Order order : orders) {
+                if (order.orderOutcome == OrderOutcome.ValidButNotDelivered) {
 
-                ArrayList<LngLat> pathToDeliver = getPathBetweenPoints(journeyPoints.get(-1), initialPoint);
-                journeyPoints.addAll(pathToRestaurant);
+                    LngLat restaurant = order.getRestaurantAddress(restaurants);
+                    LngLat currentPoint = journeyPoints.get(journeyPoints.size() - 1);
+
+                    ArrayList<LngLat> pathToRestaurant = getPathBetweenPoints(currentPoint, restaurant);
+                    journeyPoints.addAll(pathToRestaurant);
+
+                    ArrayList<LngLat> pathToDeliver = getPathBetweenPoints(currentPoint, deliveryPoint);
+                    journeyPoints.addAll(pathToDeliver);
+
+                    // parse moves into drone moves
+                    String orderNo = order.getOrderNo();
+
+                    DroneMove moveToRestaurant = new DroneMove(orderNo, restaurant.lng(), restaurant.lat(),
+                            getClosestAngleBetweenPoints(currentPoint, restaurant), currentPoint.lng(), currentPoint.lat());
+                    DroneMove hoverAtRestaurant = new DroneMove(orderNo, restaurant.lng(), restaurant.lat(),
+                            0, restaurant.lng(), restaurant.lat());
+                    DroneMove moveToDeliveryPoint = new DroneMove(order.getOrderNo(), restaurant.lng(), restaurant.lat(),
+                            getClosestAngleBetweenPoints(restaurant, deliveryPoint), deliveryPoint.lng(), deliveryPoint.lat());
+                    DroneMove hoverAtDeliveryPoint = new DroneMove(order.getOrderNo(), deliveryPoint.lng(), deliveryPoint.lat(),
+                            0, deliveryPoint.lng(), deliveryPoint.lat());
+
+                    // add drone moves to flight path
+                    flightpath.add(moveToRestaurant);
+                    flightpath.add(hoverAtRestaurant);
+                    flightpath.add(moveToDeliveryPoint);
+                    flightpath.add(hoverAtDeliveryPoint);
+
+                    if (flightpath.size() > maxMoves) {
+                        throw new TooManyMovesException("Exceeded maximum number of moves " + maxMoves); }
+                }
             }
+        }
+        catch (TooManyMovesException e){
+            e.printStackTrace();
         }
     }
 
@@ -44,10 +74,36 @@ public class Drone {
      */
     public static ArrayList<LngLat> getPathBetweenPoints(LngLat startPoint, LngLat endPoint) {
         // find angle of line from startpoint to endpoint
-        double deltaLng = endPoint.lng() - startPoint.lng();
-        double deltaLat = endPoint.lat() - startPoint.lat();
+        double closestAngle = getClosestAngleBetweenPoints(startPoint, endPoint);
 
-        double theta = Math.toDegrees((Math.atan(deltaLat / deltaLng)));
+        // find point moving in that angle
+        LngLat nextPoint = startPoint.NextPosition(COMPASS_DIRECTION.getDirectionFromAngle(closestAngle));
+
+        // if the next point is close to the end point, then the journey is complete and returned.
+        if (nextPoint.closeTo(endPoint)) {
+            return new ArrayList<LngLat>(Arrays.asList(startPoint, endPoint));
+        }
+        // otherwise, the function is run recursively from the next point and the journey returned
+        else {
+            ArrayList<LngLat> nextPath = getPathBetweenPoints(nextPoint, endPoint);
+            nextPath.add(0, startPoint);
+            return nextPath;
+        }
+    }
+
+    /**
+     * Gets the angle in one of the 16 compass directions that is as close to possible as the angle between
+     * two points.
+     * @param point1 Initial point
+     * @param point2 Final point
+     * @return The closest angle in degrees of the line between point1 and point2.
+     */
+    public static double getClosestAngleBetweenPoints(LngLat point1, LngLat point2) {
+        double deltaLng = point2.lng() - point1.lng();
+        double deltaLat = point2.lat() - point1.lat();
+
+        double theta = Math.toDegrees((Math.atan2(deltaLat, deltaLng)));
+        if (deltaLat < 0) { theta = 360-theta; }
 
         // get list of possible angles to move in
         List<COMPASS_DIRECTION> directions = Arrays.asList(COMPASS_DIRECTION.values());
@@ -64,18 +120,6 @@ public class Drone {
             }
         }
 
-        // find point moving in that angle
-        LngLat nextPoint = startPoint.NextPosition(COMPASS_DIRECTION.getDirectionFromAngle(closestAngle));
-
-        // if the next point is close to the end point, then the journey is complete and returned.
-        if (nextPoint.closeTo(endPoint)) {
-            return new ArrayList<LngLat>(Arrays.asList(startPoint, endPoint));
-        }
-        // otherwise, the function is run recursively from the next point and the journey returned
-        else {
-            ArrayList<LngLat> nextPath = getPathBetweenPoints(nextPoint, endPoint);
-            nextPath.add(0, startPoint);
-            return nextPath;
-        }
+        return closestAngle;
     }
 }

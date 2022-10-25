@@ -8,9 +8,7 @@ import org.junit.Test;
 
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class DroneTest {
 
@@ -25,8 +23,8 @@ public class DroneTest {
 
     @Test
     public void testGetPathBetweenTwoPointsWithComplexMoves() {
-        LngLat startpoint = new LngLat(0,0);
-        LngLat endpoint = new LngLat(0.001,0.043);
+        LngLat startpoint = new LngLat(0, 0);
+        LngLat endpoint = new LngLat(-0.0005,-0.0005);
 
         List<LngLat> journey = (new Drone()).getPathBetweenPoints(startpoint, endpoint);
     }
