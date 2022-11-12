@@ -1,7 +1,14 @@
 package uk.ac.ed.inf;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.mapbox.geojson.Point;
+import com.mapbox.geojson.LineString;
+import com.mapbox.geojson.Feature;
+import com.mapbox.geojson.FeatureCollection;
 import uk.ac.ed.inf.exceptions.TooManyMovesException;
 
+import java.io.*;
 import java.lang.Math;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -24,6 +31,7 @@ public class Drone {
 
     public void generatePath(Restaurant[] restaurants, Order[] orders) {
         journeyPoints.add(deliveryPoint);
+        long startTime = System.currentTimeMillis();
 
         try {
             for(Order order : orders) {
@@ -31,24 +39,28 @@ public class Drone {
 
                     LngLat restaurant = order.getRestaurantAddress(restaurants);
                     LngLat currentPoint = journeyPoints.get(journeyPoints.size() - 1);
+                    String orderNo = order.getOrderNo();
 
                     ArrayList<LngLat> pathToRestaurant = getPathBetweenPoints(currentPoint, restaurant);
                     journeyPoints.addAll(pathToRestaurant);
 
-                    ArrayList<LngLat> pathToDeliver = getPathBetweenPoints(currentPoint, deliveryPoint);
+                    DroneMove moveToRestaurant = new DroneMove(orderNo, currentPoint.lng(), currentPoint.lat(),
+                            getClosestAngleBetweenPoints(currentPoint, restaurant), restaurant.lng(), restaurant.lat(),
+                            ticksBetweenTwoMillis(startTime,System.currentTimeMillis()));
+
+                    DroneMove hoverAtRestaurant = new DroneMove(orderNo, restaurant.lng(), restaurant.lat(),
+                            null, restaurant.lng(), restaurant.lat(), ticksBetweenTwoMillis(startTime, System.currentTimeMillis()));
+
+                    ArrayList<LngLat> pathToDeliver = getPathBetweenPoints(restaurant, deliveryPoint);
                     journeyPoints.addAll(pathToDeliver);
 
-                    // parse moves into drone moves
-                    String orderNo = order.getOrderNo();
-
-                    DroneMove moveToRestaurant = new DroneMove(orderNo, restaurant.lng(), restaurant.lat(),
-                            getClosestAngleBetweenPoints(currentPoint, restaurant), currentPoint.lng(), currentPoint.lat());
-                    DroneMove hoverAtRestaurant = new DroneMove(orderNo, restaurant.lng(), restaurant.lat(),
-                            0, restaurant.lng(), restaurant.lat());
                     DroneMove moveToDeliveryPoint = new DroneMove(order.getOrderNo(), restaurant.lng(), restaurant.lat(),
-                            getClosestAngleBetweenPoints(restaurant, deliveryPoint), deliveryPoint.lng(), deliveryPoint.lat());
+                            getClosestAngleBetweenPoints(restaurant, deliveryPoint), deliveryPoint.lng(), deliveryPoint.lat(),
+                            ticksBetweenTwoMillis(startTime, System.currentTimeMillis()));
+
                     DroneMove hoverAtDeliveryPoint = new DroneMove(order.getOrderNo(), deliveryPoint.lng(), deliveryPoint.lat(),
-                            0, deliveryPoint.lng(), deliveryPoint.lat());
+                            null, deliveryPoint.lng(), deliveryPoint.lat(),
+                            ticksBetweenTwoMillis(startTime, System.currentTimeMillis()));
 
                     // add drone moves to flight path
                     flightpath.add(moveToRestaurant);
@@ -64,6 +76,12 @@ public class Drone {
         catch (TooManyMovesException e){
             e.printStackTrace();
         }
+    }
+
+    public static int ticksBetweenTwoMillis(long startTime, long endTime) {
+        long timeElapsed = endTime - startTime;
+        int ticksElapsed = Math.round(timeElapsed/10000);
+        return ticksElapsed;
     }
 
     /**
@@ -103,7 +121,7 @@ public class Drone {
         double deltaLat = point2.lat() - point1.lat();
 
         double theta = Math.toDegrees((Math.atan2(deltaLat, deltaLng)));
-        if (deltaLat < 0) { theta = 360-theta; }
+        if (deltaLat < 0) { theta = 360-Math.abs(theta); }
 
         // get list of possible angles to move in
         List<COMPASS_DIRECTION> directions = Arrays.asList(COMPASS_DIRECTION.values());
@@ -121,5 +139,59 @@ public class Drone {
         }
 
         return closestAngle;
+    }
+
+    public void writeDroneFile(String dateString) {
+        ArrayList<Point> points = new ArrayList<>();
+
+        for(LngLat lnglat : journeyPoints) {
+            points.add(Point.fromLngLat(lnglat.lng(),lnglat.lat()));
+        }
+
+        LineString journey = LineString.fromLngLats(points);
+
+        Feature feature = Feature.fromGeometry(journey);
+        FeatureCollection featureCollection = FeatureCollection.fromFeature(feature);
+
+
+        try {
+            String json= featureCollection.toJson();
+            FileWriter file = new FileWriter(String.format("drone-%s.geojson", dateString));
+            file.write(json);
+            file.close();
+
+        }
+        catch (JsonProcessingException e) {
+            e.printStackTrace();
+        }
+        catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void writeFlightpathFile(String dateString){
+
+        try{
+            FileOutputStream file = new FileOutputStream(String.format("flightpath-%s.json", dateString));
+            BufferedOutputStream buffer = new BufferedOutputStream(file);
+
+            for(DroneMove move : flightpath) {
+                ObjectMapper mapper = new ObjectMapper();
+                String json = mapper.writeValueAsString(move);
+                buffer.write(json.getBytes());
+            }
+            buffer.close();
+            file.close();
+
+        }
+        catch(JsonProcessingException e){
+            e.printStackTrace();
+        }
+        catch(FileNotFoundException e){
+            e.printStackTrace();
+        }
+        catch(IOException e){
+            e.printStackTrace();
+        }
     }
 }

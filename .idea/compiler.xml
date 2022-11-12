@@ -11,6 +11,7 @@
     </annotationProcessing>
     <bytecodeTargetLevel>
       <module name="PizzaDronz" target="16" />
+      <module name="PizzaDronz (1)" target="16" />
     </bytecodeTargetLevel>
   </component>
 </project>
