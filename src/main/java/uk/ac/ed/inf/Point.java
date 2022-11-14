@@ -3,10 +3,10 @@ package uk.ac.ed.inf;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
- * Denotes a point in the central area, used to deserialize JSON data
+ * Denotes a point in the a polygon, used to deserialize JSON data
  */
 
-public class CentralPoint {
+public class Point {
     @JsonProperty("name")
     private String name;
     @JsonProperty("longitude")

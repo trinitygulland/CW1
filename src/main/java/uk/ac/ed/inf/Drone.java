@@ -70,6 +70,9 @@ public class Drone {
 
                     if (flightpath.size() > maxMoves) {
                         throw new TooManyMovesException("Exceeded maximum number of moves " + maxMoves); }
+                    else {
+                        order.setAsDelivered();
+                    }
                 }
             }
         }

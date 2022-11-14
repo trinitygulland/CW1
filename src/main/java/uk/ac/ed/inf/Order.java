@@ -1,10 +1,14 @@
 package uk.ac.ed.inf;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import uk.ac.ed.inf.exceptions.*;
 
 import javax.xml.crypto.dsig.SignatureMethod;
+import java.io.BufferedOutputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -123,16 +127,22 @@ public class Order {
             e.printStackTrace();
         }
         catch(InvalidCvvException e) {
-            orderOutcome = orderOutcome.InvalidCvv;
+            orderOutcome = OrderOutcome.InvalidCvv;
             e.printStackTrace();
         }
         catch(InvalidCardNumberException e){
-            orderOutcome = orderOutcome.InvalidCardNumber;
+            orderOutcome = OrderOutcome.InvalidCardNumber;
             e.printStackTrace();
         }
         catch(InvalidExpiryDateException e) {
-            orderOutcome = orderOutcome.InvalidExpiryDate;
+            orderOutcome = OrderOutcome.InvalidExpiryDate;
             e.printStackTrace();
+        }
+    }
+
+    public void setAsDelivered(){
+        if (orderOutcome.equals(OrderOutcome.ValidButNotDelivered)) {
+            orderOutcome = OrderOutcome.Delivered;
         }
     }
 
@@ -316,5 +326,32 @@ public class Order {
         }
 
         return null;
+    }
+
+    public static void writeDeliveriesFile(String dateString, Order[] orders){
+
+        try{
+            FileOutputStream file = new FileOutputStream(String.format("deliveries-%s.json", dateString));
+            BufferedOutputStream buffer = new BufferedOutputStream(file);
+
+            for(Order order : orders) {
+                Delivery delivery = new Delivery(order.getOrderNo(), order.getOrderOutcome().name(), order.getPriceTotalInPence());
+                ObjectMapper mapper = new ObjectMapper();
+                String json = mapper.writeValueAsString(delivery);
+                buffer.write(json.getBytes());
+            }
+            buffer.close();
+            file.close();
+
+        }
+        catch(JsonProcessingException e){
+            e.printStackTrace();
+        }
+        catch(FileNotFoundException e){
+            e.printStackTrace();
+        }
+        catch(IOException e){
+            e.printStackTrace();
+        }
     }
 }

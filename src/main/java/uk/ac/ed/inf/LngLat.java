@@ -15,48 +15,6 @@ public record LngLat(double lng, double lat) {
     static final private double distanceTolerance = 0.00015;
 
     /**
-     * Uses ray-casting to check if a point is in the Central Area.
-     * An infinite line is cast to the right of the point.
-     * If there are an odd number of intersections between the ray
-     * and the polygon formed by the central area, the point is
-     * inside.
-     *
-     * @return True if point is in Central Area, false otherwise.
-     */
-    public boolean inCentralArea() {
-        List<LngLat> centralArea = CentralArea.getInstance().getCentralAreaFromServer();
-
-        int i;
-        int j;
-        boolean result = false;
-
-        // loop through adjacent points in polygon forming central area
-        for (i = 0, j = centralArea.size() - 1; i < centralArea.size(); j = i++) {
-
-            // find the longitude of the point where the ray intersects the line between the two points
-            double intersectionLongitude = (centralArea.get(j).lng - centralArea.get(i).lng) *
-                    (this.lat - centralArea.get(i).lat) / (centralArea.get(j).lat-centralArea.get(i).lat)
-                    + centralArea.get(i).lng;
-
-            // check that our point is between two chosen points in latitude
-            double maxLng = Math.max(centralArea.get(i).lat,centralArea.get(j).lat);
-            double minLng = Math.min(centralArea.get(i).lat,centralArea.get(j).lat);
-
-            // if a point intersects with the border, we know instantly it is in the central area
-            if (this.lng == intersectionLongitude) {
-                 return true;
-            }
-
-            if (maxLng >= this.lat && minLng <= this.lat &&
-                    // check that the intersection is to the right of our point
-                    this.lng < intersectionLongitude) {
-                result = !result;
-            }
-        }
-        return result;
-    }
-
-    /**
      *
      * @param otherPoint A provided point to calculate the distance from.
      * @return The Pythagorean distance to otherPoint.

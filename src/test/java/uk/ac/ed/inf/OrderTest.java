@@ -53,4 +53,27 @@ public class OrderTest {
             e.printStackTrace();
         }
     }
+
+    @Test
+    public void testWriteDeliveriesFile(){
+        String dateString = "2023-01-02";
+
+        try {
+            URL baseServerAddress = new URL("https://ilp-rest.azurewebsites.net/");
+            Restaurant[] restaurants = Restaurant.getRestaurantsFromServer(baseServerAddress);
+            Order[] orders = Order.getOrdersFromServer(baseServerAddress, "2023-01-02");
+
+            for (Order order : orders) {
+                order.validateOrder(restaurants);
+            }
+
+            Drone drone = new Drone();
+            drone.generatePath(restaurants, orders);
+
+            Order.writeDeliveriesFile(dateString, orders);
+        }
+        catch(MalformedURLException e){
+            e.printStackTrace();
+        }
+    }
 }

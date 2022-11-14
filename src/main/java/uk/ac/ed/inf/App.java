@@ -32,6 +32,9 @@ public class App
             Drone drone = new Drone();
             drone.generatePath(restaurants, orders);
 
+            drone.writeDroneFile(dateString);
+            drone.writeFlightpathFile(dateString);
+            Order.writeDeliveriesFile(dateString, orders);
         }
         catch (NullPointerException | MalformedURLException | IllegalArgumentException |
                ArrayIndexOutOfBoundsException | ParseException e) {
