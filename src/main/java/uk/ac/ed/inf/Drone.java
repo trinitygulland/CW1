@@ -7,7 +7,6 @@ import com.mapbox.geojson.LineString;
 import com.mapbox.geojson.Feature;
 import com.mapbox.geojson.FeatureCollection;
 import uk.ac.ed.inf.exceptions.TooManyMovesException;
-
 import java.io.*;
 import java.lang.Math;
 import java.util.ArrayList;

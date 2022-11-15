@@ -17,7 +17,7 @@ public record LngLat(double lng, double lat) {
     /**
      *
      * @param otherPoint A provided point to calculate the distance from.
-     * @return The Pythagorean distance to otherPoint.
+     * @return The Euclidean distance to otherPoint.
      */
     public double distanceTo(LngLat otherPoint) {
         double latDistance = this.lat - otherPoint.lat;
@@ -34,6 +34,23 @@ public record LngLat(double lng, double lat) {
         return (this.distanceTo(otherPoint) < distanceTolerance);
     }
 
+    /**
+     * Finds closest point to this point.
+     * @param points A list of points to search through.
+     * @return The point in the list closest to this one.
+     */
+    public LngLat closestPoint(ArrayList<LngLat> points){
+        double minDistance = distanceTo(points.get(0));
+        int closestIndex = 0;
+
+        for (int i = 1; i < points.size(); i++){
+            if (distanceTo(points.get(i)) < minDistance) {
+                closestIndex = i;
+                minDistance = distanceTo(points.get(i));
+            }
+        }
+        return points.get(closestIndex);
+    }
 
     /**
      * Computes a  move in a given compass direction and returns the result.

@@ -6,7 +6,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  * Denotes a point in the a polygon, used to deserialize JSON data
  */
 
-public class Point {
+public class CentralPoint {
     @JsonProperty("name")
     private String name;
     @JsonProperty("longitude")
