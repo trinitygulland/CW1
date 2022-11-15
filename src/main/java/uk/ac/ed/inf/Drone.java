@@ -28,7 +28,7 @@ public class Drone {
 
     public List<DroneMove> getFlightpath() { return flightpath; }
 
-    public void generatePath(Restaurant[] restaurants, Order[] orders) {
+    public void generatePath(Restaurant[] restaurants, Order[] orders, NoFlyZone[] noFlyZones) {
         journeyPoints.add(deliveryPoint);
         long startTime = System.currentTimeMillis();
 
@@ -41,31 +41,12 @@ public class Drone {
                     String orderNo = order.getOrderNo();
 
                     ArrayList<LngLat> pathToRestaurant = getPathBetweenPoints(currentPoint, restaurant);
+                    pathToRestaurant = avoidNoFlyZones(pathToRestaurant, noFlyZones);
                     journeyPoints.addAll(pathToRestaurant);
 
-                    DroneMove moveToRestaurant = new DroneMove(orderNo, currentPoint.lng(), currentPoint.lat(),
-                            getClosestAngleBetweenPoints(currentPoint, restaurant), restaurant.lng(), restaurant.lat(),
-                            ticksBetweenTwoMillis(startTime,System.currentTimeMillis()));
-
-                    DroneMove hoverAtRestaurant = new DroneMove(orderNo, restaurant.lng(), restaurant.lat(),
-                            null, restaurant.lng(), restaurant.lat(), ticksBetweenTwoMillis(startTime, System.currentTimeMillis()));
-
                     ArrayList<LngLat> pathToDeliver = getPathBetweenPoints(restaurant, deliveryPoint);
+                    pathToDeliver = avoidNoFlyZones(pathToDeliver, noFlyZones);
                     journeyPoints.addAll(pathToDeliver);
-
-                    DroneMove moveToDeliveryPoint = new DroneMove(order.getOrderNo(), restaurant.lng(), restaurant.lat(),
-                            getClosestAngleBetweenPoints(restaurant, deliveryPoint), deliveryPoint.lng(), deliveryPoint.lat(),
-                            ticksBetweenTwoMillis(startTime, System.currentTimeMillis()));
-
-                    DroneMove hoverAtDeliveryPoint = new DroneMove(order.getOrderNo(), deliveryPoint.lng(), deliveryPoint.lat(),
-                            null, deliveryPoint.lng(), deliveryPoint.lat(),
-                            ticksBetweenTwoMillis(startTime, System.currentTimeMillis()));
-
-                    // add drone moves to flight path
-                    flightpath.add(moveToRestaurant);
-                    flightpath.add(hoverAtRestaurant);
-                    flightpath.add(moveToDeliveryPoint);
-                    flightpath.add(hoverAtDeliveryPoint);
 
                     if (flightpath.size() > maxMoves) {
                         throw new TooManyMovesException("Exceeded maximum number of moves " + maxMoves); }
@@ -80,10 +61,23 @@ public class Drone {
         }
     }
 
+    /**
+     * Get the number of ticks between two millisecond times.
+     * @param startTime
+     * @param endTime
+     * @return Time in ticks between start and end time.
+     */
     public static int ticksBetweenTwoMillis(long startTime, long endTime) {
         long timeElapsed = endTime - startTime;
         int ticksElapsed = Math.round(timeElapsed/10000);
         return ticksElapsed;
+    }
+
+    public static ArrayList<LngLat> avoidNoFlyZones(ArrayList<LngLat> journey, NoFlyZone[] noFlyZones) {
+        for (NoFlyZone noFlyZone : noFlyZones) {
+            journey = noFlyZone.createConvexJourney(journey);
+        }
+        return journey;
     }
 
     /**
@@ -109,6 +103,21 @@ public class Drone {
             nextPath.add(0, startPoint);
             return nextPath;
         }
+    }
+
+    /**
+     * Finds most direct path between a whole array of points.
+     * @param points Points to find route between.
+     * @return Points in route.
+     */
+    public static ArrayList<LngLat> getPathBetweenMultiplePoints(ArrayList<LngLat> points){
+        ArrayList<LngLat> journey = new ArrayList<>();
+
+        for (int i = 1; i < points.size(); i++) {
+            journey.addAll(getPathBetweenPoints(points.get(i-1),points.get(i)));
+        }
+
+        return journey;
     }
 
     /**

@@ -62,13 +62,14 @@ public class OrderTest {
             URL baseServerAddress = new URL("https://ilp-rest.azurewebsites.net/");
             Restaurant[] restaurants = Restaurant.getRestaurantsFromServer(baseServerAddress);
             Order[] orders = Order.getOrdersFromServer(baseServerAddress, "2023-01-02");
+            NoFlyZone[] noFlyZones = NoFlyZone.getNoFlyZonesFromServer(baseServerAddress);
 
             for (Order order : orders) {
                 order.validateOrder(restaurants);
             }
 
             Drone drone = new Drone();
-            drone.generatePath(restaurants, orders);
+            drone.generatePath(restaurants, orders, noFlyZones);
 
             Order.writeDeliveriesFile(dateString, orders);
         }

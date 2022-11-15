@@ -101,7 +101,16 @@ public class NoFlyZone extends Polygon{
                 endIndex = i;
             }
         }
-        ArrayList<LngLat> subjourney = new ArrayList<>(journey.subList(startIndex, endIndex+1));
+        ArrayList<LngLat> subjourney;
+
+        if (startIndex <= endIndex) {
+            subjourney = new ArrayList<>(journey.subList(startIndex, endIndex+1));
+        }
+        else {
+            subjourney = new ArrayList<>(journey.subList(0,endIndex+1));
+            subjourney.addAll(new ArrayList<>(journey.subList(startIndex, journey.size())));
+        }
+
         return subjourney;
     }
 
@@ -141,21 +150,20 @@ public class NoFlyZone extends Polygon{
         return subjourney;
     }
 
-    public static ArrayList<NoFlyZone> getNoFlyZonesFromServer(String baseUrl){
+    public static NoFlyZone[] getNoFlyZonesFromServer(URL baseUrl){
         String endpoint = "noflyzones";
 
         try {
-            if (!baseUrl.endsWith(("/"))) {
-                baseUrl += "/";
-            }
-            URL url = new URL(baseUrl + endpoint);
+            URL noFlyZoneUrl = new URL(baseUrl.getProtocol(), baseUrl.getHost(),
+                    baseUrl.getPort(), baseUrl.getPath() + "/" + endpoint);
+
 
             ObjectMapper mapper = new ObjectMapper();
-            NoFlyZone[] zones = mapper.readValue(url, NoFlyZone[].class);
+            NoFlyZone[] zones = mapper.readValue(noFlyZoneUrl, NoFlyZone[].class);
 
             for(NoFlyZone zone : zones) { zone.setAreaPoints(); }
 
-            return (new ArrayList<>(Arrays.asList(zones)));
+            return zones;
 
         } catch (IOException e) {
             e.printStackTrace();

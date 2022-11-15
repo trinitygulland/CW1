@@ -35,13 +35,14 @@ public class DroneTest {
             URL baseServerAddress = new URL("https://ilp-rest.azurewebsites.net/");
             Restaurant[] restaurants = Restaurant.getRestaurantsFromServer(baseServerAddress);
             Order[] orders = Order.getOrdersFromServer(baseServerAddress, "2023-04-15");
+            NoFlyZone[] noFlyZones = NoFlyZone.getNoFlyZonesFromServer(baseServerAddress);
 
             for (Order order : orders) {
                 order.validateOrder(restaurants);
             }
 
             Drone drone = new Drone();
-            drone.generatePath(restaurants, orders);
+            drone.generatePath(restaurants, orders, noFlyZones);
         }
         catch(MalformedURLException e) {
             e.printStackTrace();
@@ -56,11 +57,12 @@ public class DroneTest {
             URL baseServerAddress = new URL("https://ilp-rest.azurewebsites.net/");
             Restaurant[] restaurants = Restaurant.getRestaurantsFromServer(baseServerAddress);
             Order[] orders = Order.getOrdersFromServer(baseServerAddress, dateString);
+            NoFlyZone[] noFlyZones = NoFlyZone.getNoFlyZonesFromServer(baseServerAddress);
 
             for (Order order : orders) {
                 order.validateOrder(restaurants);
             }
-            drone.generatePath(restaurants, orders);
+            drone.generatePath(restaurants, orders, noFlyZones);
         }
         catch(MalformedURLException e) {
             e.printStackTrace();
@@ -77,11 +79,12 @@ public class DroneTest {
             URL baseServerAddress = new URL("https://ilp-rest.azurewebsites.net/");
             Restaurant[] restaurants = Restaurant.getRestaurantsFromServer(baseServerAddress);
             Order[] orders = Order.getOrdersFromServer(baseServerAddress, dateString);
+            NoFlyZone[] noFlyZones = NoFlyZone.getNoFlyZonesFromServer(baseServerAddress);
 
             for (Order order : orders) {
                 order.validateOrder(restaurants);
             }
-            drone.generatePath(restaurants, orders);
+            drone.generatePath(restaurants, orders, noFlyZones);
         }
         catch(MalformedURLException e) {
             e.printStackTrace();

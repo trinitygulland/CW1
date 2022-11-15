@@ -24,13 +24,14 @@ public class App
 
             Restaurant[] restaurants = Restaurant.getRestaurantsFromServer(baseUrlAddress);
             Order[] orders = Order.getOrdersFromServer(baseUrlAddress, dateString);
+            NoFlyZone[] noFlyZones = NoFlyZone.getNoFlyZonesFromServer(baseUrlAddress);
 
             for(Order order : orders) {
                 order.validateOrder(restaurants);
             }
 
             Drone drone = new Drone();
-            drone.generatePath(restaurants, orders);
+            drone.generatePath(restaurants, orders, noFlyZones);
 
             drone.writeDroneFile(dateString);
             drone.writeFlightpathFile(dateString);
